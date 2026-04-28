@@ -104,10 +104,7 @@ let currentUser = null;
 async function loadUser() {
   const { data, error } = await supabase.auth.getUser();
 
-  if (error) {
-    console.log(error.message);
-    return;
-  }
+  if (error) return console.log(error.message);
 
   const user = data.user;
 
@@ -118,45 +115,43 @@ async function loadUser() {
   }
 
   currentUser = user;
-  const name = user.user_metadata?.name || user.email;
-  document.getElementById("user-name").textContent = name;
+  document.getElementById("user-name").textContent =
+    user.user_metadata?.name || user.email;
 }
 
-// ===== LOGIN =====
-document.getElementById("login-btn").onclick = async () => {
-  const email = email.value;
-  const password = password.value;
+// ===== AUTH =====
+document.getElementById("signup-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const name = document.getElementById("name").value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name }
+    }
+  });
+
+  if (error) return alert(error.message);
+
+  alert("Готово. Если включено подтверждение — проверь почту");
+};
+
+document.getElementById("login-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password
   });
 
-  if (error) return alert("Ошибка входа: " + error.message);
+  if (error) return alert(error.message);
 
   loadUser();
 };
 
-// ===== SIGNUP =====
-document.getElementById("signup-btn").onclick = async () => {
-  const emailVal = email.value;
-  const passVal = password.value;
-  const nameVal = name.value;
-
-  const { data, error } = await supabase.auth.signUp({
-    email: emailVal,
-    password: passVal,
-    options: {
-      data: { name: nameVal }
-    }
-  });
-
-  if (error) return alert("Ошибка регистрации: " + error.message);
-
-  alert("Если включено подтверждение — проверь почту. Иначе ты уже зарегистрирован.");
-};
-
-// ===== LOGOUT =====
 document.getElementById("logout-btn").onclick = async () => {
   await supabase.auth.signOut();
   currentUser = null;
@@ -199,10 +194,7 @@ async function loadMessages() {
     .select("*")
     .order("created_at");
 
-  if (error) {
-    console.log(error.message);
-    return;
-  }
+  if (error) return console.log(error.message);
 
   const chat = document.getElementById("chat");
   chat.innerHTML = "";
@@ -213,9 +205,10 @@ async function loadMessages() {
 }
 
 document.getElementById("send-btn").onclick = async () => {
-  if (!currentUser) return alert("Войди сначала");
+  if (!currentUser) return alert("Сначала войди");
 
-  const text = message-input.value;
+  const input = document.getElementById("message-input");
+  const text = input.value;
 
   if (!text) return;
 
@@ -228,14 +221,14 @@ document.getElementById("send-btn").onclick = async () => {
 
   if (error) return alert(error.message);
 
-  message-input.value = "";
+  input.value = "";
   loadMessages();
 };
 
 // ===== INIT =====
 loadUser();
-updateTimer();
 loadMessages();
+updateTimer();
 </script>
 
 </body>
