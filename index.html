@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Розовый таймер + чат</title>
+<title>мяу</title>
 
 <style>
 body {
@@ -102,11 +102,18 @@ const supabase = createClient(
 let currentUser = null;
 
 async function loadUser() {
-  const { data } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
   const user = data.user;
 
   if (!user) {
     document.getElementById("user-name").textContent = "Не авторизован";
+    currentUser = null;
     return;
   }
 
@@ -116,83 +123,116 @@ async function loadUser() {
 }
 
 // ===== AUTH =====
-login-btn.onclick = async () => {
+document.getElementById("login-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
   const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
+    email,
+    password
   });
 
   if (error) return alert(error.message);
+
   loadUser();
 };
 
-signup-btn.onclick = async () => {
+document.getElementById("signup-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const name = document.getElementById("name").value;
+
   const { error } = await supabase.auth.signUp({
-    email: email.value,
-    password: password.value,
-    options: { data: { name: name.value } }
+    email,
+    password,
+    options: {
+      data: { name }
+    }
   });
 
   if (error) return alert(error.message);
-  alert("Проверь почту");
+
+  alert("Проверь почту (или отключи подтверждение в Supabase)");
 };
 
-logout-btn.onclick = async () => {
+document.getElementById("logout-btn").onclick = async () => {
   await supabase.auth.signOut();
   loadUser();
 };
 
 // ===== TIMER =====
-let sec = 0, int = null;
+let seconds = 0;
+let interval = null;
 
-function update() {
-  timer.textContent = sec + " сек";
+function updateTimer() {
+  document.getElementById("timer").textContent = seconds + " сек";
 }
 
-start-btn.onclick = () => {
-  if (int) return;
-  int = setInterval(() => { sec++; update(); }, 1000);
+document.getElementById("start-btn").onclick = () => {
+  if (interval) return;
+
+  interval = setInterval(() => {
+    seconds++;
+    updateTimer();
+  }, 1000);
 };
 
-pause-btn.onclick = () => {
-  clearInterval(int); int = null;
+document.getElementById("pause-btn").onclick = () => {
+  clearInterval(interval);
+  interval = null;
 };
 
-stop-btn.onclick = () => {
-  clearInterval(int); int = null;
-  sec = 0; update();
+document.getElementById("stop-btn").onclick = () => {
+  clearInterval(interval);
+  interval = null;
+  seconds = 0;
+  updateTimer();
 };
 
 // ===== CHAT =====
 async function loadMessages() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("messages")
     .select("*")
     .order("created_at");
 
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const chat = document.getElementById("chat");
   chat.innerHTML = "";
+
   data.forEach(msg => {
     chat.innerHTML += `<div><b>${msg.user_name}:</b> ${msg.text}</div>`;
   });
 }
 
-send-btn.onclick = async () => {
-  if (!currentUser) return alert("Войди");
+document.getElementById("send-btn").onclick = async () => {
+  if (!currentUser) return alert("Сначала войди");
+
+  const input = document.getElementById("message-input");
+  const text = input.value;
+
+  if (!text) return;
 
   const name = currentUser.user_metadata?.name || currentUser.email;
 
-  await supabase.from("messages").insert({
+  const { error } = await supabase.from("messages").insert({
     user_name: name,
-    text: message-input.value
+    text: text
   });
 
-  message-input.value = "";
+  if (error) return alert(error.message);
+
+  input.value = "";
   loadMessages();
 };
 
 // ===== INIT =====
 loadUser();
-update();
+updateTimer();
 loadMessages();
 </script>
 
