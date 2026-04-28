@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>мяу</title>
+<title>App</title>
 
 <style>
 body {
@@ -18,8 +18,8 @@ body {
   backdrop-filter: blur(10px);
   padding: 25px;
   border-radius: 20px;
-  display: inline-block;
-  width: 350px;
+  width: 360px;
+  margin: auto;
 }
 
 #timer {
@@ -35,21 +35,21 @@ button {
   cursor: pointer;
 }
 
-#start-btn { background: #ff66b2; }
-#pause-btn { background: #ff99cc; }
-#stop-btn { background: #ff3385; }
+#start { background:#ff66b2; }
+#pause { background:#ff99cc; }
+#stop { background:#ff3385; }
 
 input {
+  width: 90%;
   padding: 8px;
   margin: 5px;
   border-radius: 8px;
   border: none;
-  width: 90%;
 }
 
 #chat {
-  margin-top: 20px;
-  height: 200px;
+  margin-top: 15px;
+  height: 180px;
   overflow-y: auto;
   background: rgba(0,0,0,0.2);
   padding: 10px;
@@ -63,30 +63,30 @@ input {
 
 <div class="card">
 
-<h2 id="user-name">Не авторизован</h2>
+<h2 id="user">Не авторизован</h2>
 
 <div id="timer">0 сек</div>
 
-<button id="start-btn">Старт</button>
-<button id="pause-btn">Пауза</button>
-<button id="stop-btn">Стоп</button>
+<button id="start">Старт</button>
+<button id="pause">Пауза</button>
+<button id="stop">Стоп</button>
 
 <hr>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Пароль">
-<input id="name" placeholder="Имя">
+<input id="email" placeholder="email">
+<input id="password" placeholder="password">
+<input id="name" placeholder="name">
 
-<button id="login-btn">Войти</button>
-<button id="signup-btn">Регистрация</button>
-<button id="logout-btn">Выйти</button>
+<button id="login">Войти</button>
+<button id="signup">Регистрация</button>
+<button id="logout">Выйти</button>
 
 <hr>
 
 <div id="chat"></div>
 
-<input id="message-input" placeholder="Сообщение...">
-<button id="send-btn">Отправить</button>
+<input id="msg" placeholder="сообщение">
+<button id="send">Отправить</button>
 
 </div>
 
@@ -99,136 +99,105 @@ const supabase = createClient(
 );
 
 // ===== USER =====
-let currentUser = null;
+let userData = null;
 
-async function loadUser() {
-  const { data, error } = await supabase.auth.getUser();
+async function getUser() {
+  const { data } = await supabase.auth.getUser();
+  userData = data.user;
 
-  if (error) return console.log(error.message);
-
-  const user = data.user;
-
-  if (!user) {
-    document.getElementById("user-name").textContent = "Не авторизован";
-    currentUser = null;
-    return;
-  }
-
-  currentUser = user;
-  document.getElementById("user-name").textContent =
-    user.user_metadata?.name || user.email;
+  document.getElementById("user").textContent =
+    userData ? (userData.user_metadata?.name || userData.email) : "Не авторизован";
 }
 
 // ===== AUTH =====
-document.getElementById("signup-btn").onclick = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const name = document.getElementById("name").value;
-
+document.getElementById("signup").onclick = async () => {
   const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { name }
-    }
+    email: email.value,
+    password: password.value,
+    options: { data: { name: name.value } }
   });
 
   if (error) return alert(error.message);
-
-  alert("Готово. Если включено подтверждение — проверь почту");
+  alert("Готово (если включено подтверждение — проверь почту)");
 };
 
-document.getElementById("login-btn").onclick = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
+document.getElementById("login").onclick = async () => {
   const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
+    email: email.value,
+    password: password.value
   });
 
   if (error) return alert(error.message);
-
-  loadUser();
+  getUser();
 };
 
-document.getElementById("logout-btn").onclick = async () => {
+document.getElementById("logout").onclick = async () => {
   await supabase.auth.signOut();
-  currentUser = null;
-  loadUser();
+  userData = null;
+  getUser();
 };
 
 // ===== TIMER =====
-let seconds = 0;
-let interval = null;
+let sec = 0;
+let int = null;
 
-function updateTimer() {
-  document.getElementById("timer").textContent = seconds + " сек";
-}
-
-document.getElementById("start-btn").onclick = () => {
-  if (interval) return;
-
-  interval = setInterval(() => {
-    seconds++;
-    updateTimer();
+document.getElementById("start").onclick = () => {
+  if (int) return;
+  int = setInterval(() => {
+    sec++;
+    document.getElementById("timer").textContent = sec + " сек";
   }, 1000);
 };
 
-document.getElementById("pause-btn").onclick = () => {
-  clearInterval(interval);
-  interval = null;
+document.getElementById("pause").onclick = () => {
+  clearInterval(int);
+  int = null;
 };
 
-document.getElementById("stop-btn").onclick = () => {
-  clearInterval(interval);
-  interval = null;
-  seconds = 0;
-  updateTimer();
+document.getElementById("stop").onclick = () => {
+  clearInterval(int);
+  int = null;
+  sec = 0;
+  document.getElementById("timer").textContent = "0 сек";
 };
 
 // ===== CHAT =====
-async function loadMessages() {
-  const { data, error } = await supabase
+async function loadChat() {
+  const { data } = await supabase
     .from("messages")
     .select("*")
     .order("created_at");
 
-  if (error) return console.log(error.message);
-
   const chat = document.getElementById("chat");
   chat.innerHTML = "";
 
-  data.forEach(msg => {
-    chat.innerHTML += `<div><b>${msg.user_name}:</b> ${msg.text}</div>`;
+  data.forEach(m => {
+    chat.innerHTML += `<div><b>${m.user_name}:</b> ${m.text}</div>`;
   });
 }
 
-document.getElementById("send-btn").onclick = async () => {
-  if (!currentUser) return alert("Сначала войди");
+document.getElementById("send").onclick = async () => {
+  if (!userData) return alert("войди");
 
-  const input = document.getElementById("message-input");
-  const text = input.value;
-
+  const text = document.getElementById("msg").value;
   if (!text) return;
 
-  const name = currentUser.user_metadata?.name || currentUser.email;
+  const name = userData.user_metadata?.name || userData.email;
 
   const { error } = await supabase.from("messages").insert({
     user_name: name,
-    text: text
+    text
   });
 
   if (error) return alert(error.message);
 
-  input.value = "";
-  loadMessages();
+  document.getElementById("msg").value = "";
+  loadChat();
 };
 
 // ===== INIT =====
-loadUser();
-loadMessages();
-updateTimer();
+getUser();
+loadChat();
 </script>
 
 </body>
