@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Таймер</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 15px;
+      display: inline-block;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    #timer {
+      font-size: 40px;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #start-btn { background: #22c55e; }
+    #pause-btn { background: #eab308; }
+    #stop-btn { background: #ef4444; }
+
+    input {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 6px;
+      border: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2 id="user-name">Не авторизован</h2>
+
+  <div id="timer">0 сек</div>
+
+  <button id="start-btn">Старт</button>
+  <button id="pause-btn">Пауза</button>
+  <button id="stop-btn">Стоп</button>
+
+  <hr style="margin:20px 0">
+
+  <div>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Пароль">
+    <input id="name" placeholder="Имя">
+
+    <br>
+
+    <button id="login-btn">Войти</button>
+    <button id="signup-btn">Регистрация</button>
+    <button id="logout-btn">Выйти</button>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+// ⚠️ ВСТАВЬ СВОИ ДАННЫЕ
+const SUPABASE_URL = "https://jjaxitqamrxkktiltgdd.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqYXhpdHFhbXJ4a2t0aWx0Z2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTkyNTYsImV4cCI6MjA5MjkzNTI1Nn0.9YorjGmJ7a8m-8JTUyDuTyfZs1GDVE-z483t5iczmfs";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ====== ПОЛЬЗОВАТЕЛЬ ======
+async function loadUser() {
+  const { data } = await supabase.auth.getUser();
+  const user = data.user;
+
+  if (!user) {
+    document.getElementById("user-name").textContent = "Не авторизован";
+    return;
+  }
+
+  const name = user.user_metadata?.name || user.email;
+  document.getElementById("user-name").textContent = name;
+}
+
+// ====== АВТОРИЗАЦИЯ ======
+document.getElementById("signup-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const name = document.getElementById("name").value;
+
+  await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name }
+    }
+  });
+
+  alert("Регистрация ок");
+};
+
+document.getElementById("login-btn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  loadUser();
+};
+
+document.getElementById("logout-btn").onclick = async () => {
+  await supabase.auth.signOut();
+  loadUser();
+};
+
+// ====== ТАЙМЕР ======
+let seconds = 0;
+let interval = null;
+
+function updateTimer() {
+  document.getElementById("timer").textContent = seconds + " сек";
+}
+
+function startTimer() {
+  if (interval) return;
+
+  interval = setInterval(() => {
+    seconds++;
+    updateTimer();
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(interval);
+  interval = null;
+}
+
+function stopTimer() {
+  clearInterval(interval);
+  interval = null;
+  seconds = 0;
+  updateTimer();
+}
+
+// ====== КНОПКИ ======
+document.getElementById("start-btn").onclick = startTimer;
+document.getElementById("pause-btn").onclick = pauseTimer;
+document.getElementById("stop-btn").onclick = stopTimer;
+
+// ====== СТАРТ ======
+loadUser();
+updateTimer();
+</script>
+
+</body>
+</html>
