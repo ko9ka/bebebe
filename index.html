@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Практика 2 - Панель Управления Учебой</title>
+    <title>Практика 2 - Система Мониторинга Учебы</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* Базовые настройки страницы и яркий розовый фон */
         body {
-            background-color: #FF52A2; /* Фирменный розовый фон */
+            background-color: #FF52A2; 
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
@@ -20,15 +21,15 @@
             color: #333;
         }
 
-        /* Контейнер для блоков (как в левой колонке твоего макета) */
-        .column {
+        /* Главная колонка с карточками, как в макете */
+        .dashboard-column {
             display: flex;
             flex-direction: column;
             gap: 15px;
             width: 360px;
         }
 
-        /* Карточки блоков */
+        /* Общие стили для аккуратных белых карточек */
         .card {
             background: white;
             border-radius: 16px;
@@ -37,22 +38,22 @@
             box-sizing: border-box;
         }
 
+        /* Блок 1: Профиль и Время */
         .profile-card { text-align: center; }
-        .profile-card h4 { margin: 0 0 5px 0; color: #555; }
+        .profile-card h4 { margin: 0 0 5px 0; color: #555; font-size: 15px; }
 
-        /* Таймер времени */
         .timer-val {
             font-size: 32px;
             font-weight: bold;
             color: #FF007F;
-            margin: 10px 0;
+            margin: 12px 0;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 8px;
         }
 
-        /* Кнопки действий */
+        /* Кнопки управления сессией */
         .btn-main {
             width: 100%;
             background: #FF007F;
@@ -64,6 +65,7 @@
             cursor: pointer;
             margin-bottom: 8px;
             font-size: 14px;
+            transition: background 0.2s;
         }
         .btn-main:hover { background: #E60073; }
 
@@ -87,7 +89,7 @@
             color: #FF007F;
         }
 
-        /* Авторизация инпуты */
+        /* Поля ввода для авторизации */
         .auth-inputs input {
             width: 100%;
             padding: 10px;
@@ -97,7 +99,7 @@
             box-sizing: border-box;
         }
 
-        /* МОНИТОР ГРУППЫ */
+        /* Блок 2: Стили Монитора группы */
         .monitor-card h3, .chat-card h3 {
             margin: 0 0 12px 0;
             font-size: 15px;
@@ -111,7 +113,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            max-height: 120px;
+            max-height: 150px;
             overflow-y: auto;
         }
 
@@ -120,8 +122,8 @@
             justify-content: space-between;
             align-items: center;
             font-size: 13px;
-            padding: 4px 0;
-            border-bottom: 1px id #F9F9F9;
+            padding: 6px 0;
+            border-bottom: 1px solid #F5F5F5;
         }
 
         .user-info {
@@ -130,22 +132,29 @@
             gap: 8px;
         }
 
-        .dot {
-            width: 8px;
-            height: 8px;
+        /* Свечение и форма круглого онлайн-индикатора */
+        .status-dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #CCC; /* Офлайн по умолчанию */
+            background: #CCC; /* Офлайн (серый) */
+            transition: background 0.3s;
         }
-        .dot.online {
-            background: #2ECC71; /* Онлайн-зеленый */
-            box-shadow: 0 0 6px #2ECC71;
+        .status-dot.online {
+            background: #2ECC71; /* Онлайн (зеленый) */
+            box-shadow: 0 0 8px #2ECC71;
         }
 
-        /* ОБЩИЙ ЧАТ */
+        .location-tag {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* Блок 3: Общий чат */
         .chat-card {
             display: flex;
             flex-direction: column;
-            height: 280px;
+            height: 300px;
         }
 
         .chat-box {
@@ -169,6 +178,7 @@
             line-height: 1.4;
             max-width: 90%;
             align-self: flex-start;
+            border-left: 3px solid #FF52A2;
         }
         .chat-msg .author {
             font-weight: bold;
@@ -201,10 +211,10 @@
 </head>
 <body>
 
-    <div class="column">
+    <div class="dashboard-column">
         
         <div class="card profile-card">
-            <h4 id="user-display">Загрузка аккаунта...</h4>
+            <h4 id="user-display">Проверка аккаунта...</h4>
             <div class="timer-val">
                 <span>⏱️</span> <span id="seconds">0</span> сек.
             </div>
@@ -223,7 +233,7 @@
                 </div>
                 <div class="btn-row" style="margin-top:5px;">
                     <button class="btn-sub" style="background:#FF007F; color:white;" onclick="signIn()">Войти</button>
-                    <button class="btn-sub" onclick="signUp()">Рега</button>
+                    <button class="btn-sub" onclick="signUp()">Регистрация</button>
                 </div>
             </div>
         </div>
@@ -238,7 +248,7 @@
         <div class="card chat-card">
             <h3>💬 Общий чат</h3>
             <div class="chat-box" id="chat-box">
-                <div style="color:#aaa; font-size:11px; text-align:center; margin-top:40px;">Войдите в систему для просмотра сообщений.</div>
+                <div style="color:#aaa; font-size:11px; text-align:center; margin-top:50px;">Войдите в систему для просмотра сообщений.</div>
             </div>
             <div class="chat-input-row">
                 <input type="text" id="msg-text" placeholder="Сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
@@ -249,7 +259,7 @@
     </div>
 
     <script>
-        // === КОНФИГУРАЦИЯ ТВОЕГО SUPABASE ===
+        // === НАСТРОЙКИ ПОДКЛЮЧЕНИЯ К ТВОЕЙ БАЗЕ SUPABASE ===
         const SUPABASE_URL = "https://eehbqfrrojaykcipwpvp.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlaGJxZnJyb2pheWtjaXB3cHZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjk4MzksImV4cCI6MjA5MTk0NTgzOX0.L5vqwPKu7Ps3izTIwMvdtt71u7YPXXZ__k1yNqpmzQE";
         
@@ -262,7 +272,7 @@
 
         document.getElementById('seconds').innerText = totalSeconds;
 
-        // === УПРАВЛЕНИЕ ТАЙМЕРОМ СЕССИИ ===
+        // === ЛОГИКА СЧЕТЧИКА ВРЕМЕНИ ===
         function startTimer() {
             if(timerInterval) clearInterval(timerInterval);
             isPaused = false;
@@ -293,10 +303,8 @@
         function toggleSession() {
             if (!currentUser) return;
             if (isPaused) {
-                // Если были на паузе — продолжаем
                 startTimer();
             } else {
-                // Если учились — обнуляем сессию
                 clearInterval(timerInterval);
                 totalSeconds = 0;
                 document.getElementById('seconds').innerText = totalSeconds;
@@ -305,7 +313,7 @@
             }
         }
 
-        // === ОБНОВЛЕНИЕ СТАТУСА ПРИСУТСТВИЯ (БД profiles) ===
+        // === СИНХРОНИЗАЦИЯ ПОЛЬЗОВАТЕЛЕЙ С ТАБЛИЦЕЙ PROFILES ===
         async function updatePresence(user) {
             if (!user) return;
             await _supabase.from('profiles').upsert({
@@ -313,7 +321,7 @@
                 email: user.email,
                 last_seen: new Date().toISOString()
             });
-            loadGroupMonitor(); // Сразу перерисовываем список группы
+            loadGroupMonitor(); 
         }
 
         // === АВТОРИЗАЦИЯ ===
@@ -322,7 +330,7 @@
             const password = document.getElementById('password').value;
             const { data, error } = await _supabase.auth.signUp({ email, password });
             if (error) alert(error.message);
-            else { alert("Успешно зарегистрировано!"); if(data.user) await updatePresence(data.user); checkUser(); }
+            else { alert("Регистрация прошла успешно!"); if(data.user) await updatePresence(data.user); checkUser(); }
         }
 
         async function signIn() {
@@ -350,17 +358,17 @@
                 startTimer();
                 loadMessages();
                 loadGroupMonitor();
-                listenRealtimeChannels(); // Включаем «живое» обновление данных
+                listenRealtime(); // Запуск веб-сокетов
             } else {
                 currentUser = null;
                 document.getElementById('user-display').innerText = "Вход в систему";
                 document.getElementById('auth-form').style.display = 'block';
-                document.getElementById('chat-box').innerHTML = `<div style="color:#aaa; font-size:11px; text-align:center; margin-top:40px;">Войдите в систему для просмотра сообщений.</div>`;
-                document.getElementById('monitor-list').innerHTML = `<div style="color:#aaa; font-size:11px; text-align:center;">Список недоступен.</div>`;
+                document.getElementById('chat-box').innerHTML = `<div style="color:#aaa; font-size:11px; text-align:center; margin-top:50px;">Войдите в систему для просмотра сообщений.</div>`;
+                document.getElementById('monitor-list').innerHTML = `<div style="color:#aaa; font-size:11px; text-align:center;">Список недоступен. Залогиньтесь.</div>`;
             }
         }
 
-        // === МОНИТОР ГРУППЫ (Вывод челов) ===
+        // === ЛОГИКА РАБОТЫ МОНИТОРА ГРУППЫ ===
         async function loadGroupMonitor() {
             if(!currentUser) return;
             const { data: profiles, error } = await _supabase.from('profiles').select('*').order('last_seen', { ascending: false });
@@ -370,7 +378,7 @@
             listContainer.innerHTML = "";
 
             profiles.forEach(p => {
-                // Если человек обновлял статус последние 3 минуты — он Онлайн
+                // Если пользователь обновлялся менее 3 минут назад — ставим статус Онлайн
                 const isOnline = (new Date() - new Date(p.last_seen)) < 3 * 60 * 1000;
                 const shortName = p.email.split('@')[0];
 
@@ -378,19 +386,19 @@
                 row.classList.add('user-row');
                 row.innerHTML = `
                     <div class="user-info">
-                        <span class="dot ${isOnline ? 'online' : ''}"></span>
+                        <span class="status-dot ${isOnline ? 'online' : ''}"></span>
                         <span>${shortName}</span>
                     </div>
-                    <span style="font-size:10px; color:#aaa;">${isOnline ? '🏠 Дома' : 'был недавно'}</span>
+                    <span class="location-tag">${isOnline ? '🏠 Дома' : 'был недавно'}</span>
                 `;
                 listContainer.appendChild(row);
             });
         }
 
-        // === ОБЩИЙ ЧАТ (Загрузка и вывод сообщений) ===
+        // === ЛОГИКА РАБОТЫ ОБЩЕГО ЧАТА ===
         async function loadMessages() {
             if (!currentUser) return;
-            const { data: messages, error } = await _supabase.from('messages').select('*').order('created_at', { ascending: true }).limit(40);
+            const { data: messages, error } = await _supabase.from('messages').select('*').order('created_at', { ascending: true }).limit(50);
             if (error) return;
 
             const box = document.getElementById('chat-box');
@@ -422,33 +430,33 @@
                 user_email: currentUser.email,
                 text: text
             });
-            if (error) alert("Ошибка отправки: " + error.message);
+            if (error) alert("Ошибка: " + error.message);
             else input.value = "";
         }
 
-        // === REALTIME (Чтобы сообщения не улетали, а сразу рисовались) ===
-        function listenRealtimeChannels() {
-            // Подписка на сообщения
-            _supabase.channel('room-messages')
+        // === REALTIME-ОБНОВЛЕНИЕ БЕЗ ПЕРЕЗАГРУЗОК (ЧАТ И МОНИТОР) ===
+        function listenRealtime() {
+            // Слушаем новые сообщения в чате
+            _supabase.channel('chat-room')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
                     appendMessage(payload.new);
                 })
                 .subscribe();
 
-            // Подписка на изменение онлайна группы
-            _supabase.channel('room-profiles')
+            // Слушаем входы и обновления статусов в группе
+            _supabase.channel('monitor-room')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
                     loadGroupMonitor();
                 })
                 .subscribe();
 
-            // Каждые 2 минуты обновляем свой статус "last_seen" в фоне
+            // Каждые 2 минуты фоном шлем сигнал в БД, что мы до сих пор активны (онлайн)
             setInterval(() => {
                 if (currentUser) updatePresence(currentUser);
             }, 120000);
         }
 
-        // Запуск при старте страницы
+        // Старт проверки при загрузке страницы
         checkUser();
     </script>
 </body>
