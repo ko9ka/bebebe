@@ -1,204 +1,378 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практика 2 - Розовый Интерфейс и Чат</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background-color: #FF52A2; 
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            color: white;
+        }
 
-<style>
-body {
-  font-family: Arial;
-  background: linear-gradient(135deg, #ff9ecf, #ff4da6);
-  color: white;
-  text-align: center;
-  padding: 30px;
-}
+        /* Основные контейнеры (Форма и Чат) */
+        .panel {
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            box-sizing: border-box;
+        }
 
-.card {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(10px);
-  padding: 25px;
-  border-radius: 20px;
-  width: 360px;
-  margin: auto;
-}
+        .left-panel {
+            width: 320px;
+            text-align: center;
+        }
 
-#timer {
-  font-size: 40px;
-  margin: 20px 0;
-}
+        .chat-panel {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            height: 480px;
+        }
 
-button {
-  padding: 10px;
-  margin: 5px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
+        h2, h3 {
+            font-size: 18px;
+            margin: 0 0 10px 0;
+            font-weight: normal;
+            opacity: 0.9;
+        }
 
-#start { background:#ff66b2; }
-#pause { background:#ff99cc; }
-#stop { background:#ff3385; }
+        /* Счетчик времени */
+        .timer {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
 
-input {
-  width: 90%;
-  padding: 8px;
-  margin: 5px;
-  border-radius: 8px;
-  border: none;
-}
+        .timer-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
 
-#chat {
-  margin-top: 15px;
-  height: 180px;
-  overflow-y: auto;
-  background: rgba(0,0,0,0.2);
-  padding: 10px;
-  border-radius: 10px;
-  text-align: left;
-}
-</style>
+        .btn-timer {
+            background: #FF007F;
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Поля ввода */
+        input {
+            width: 100%;
+            padding: 11px;
+            margin: 6px 0;
+            border: none;
+            border-radius: 8px;
+            box-sizing: border-box;
+            color: #333;
+            font-size: 14px;
+            background: white;
+        }
+
+        /* Кнопки */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 6px;
+        }
+
+        .btn-action {
+            flex: 1;
+            background: white;
+            color: #FF52A2;
+            border: none;
+            padding: 11px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .btn-action:hover {
+            background: #FFF0F5;
+        }
+
+        /* Стили окна Общего Чата */
+        .chat-history {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .msg {
+            background: #FFE4E1;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            max-width: 85%;
+            word-break: break-word;
+            border-left: 4px solid #FF52A2;
+        }
+
+        .msg-author {
+            font-weight: bold;
+            color: #D87093;
+            font-size: 11px;
+            margin-bottom: 2px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-send {
+            background: #FF007F;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="card">
+    <div class="panel left-panel">
+        <h2 id="auth-status">Не авторизован</h2>
+        
+        <div class="timer"><span id="seconds">0</span> сек</div>
+        
+        <div class="timer-buttons">
+            <button class="btn-timer" onclick="startTimer()">Старт</button>
+            <button class="btn-timer" onclick="pauseTimer()">Пауза</button>
+            <button class="btn-timer" onclick="stopTimer()">Стоп</button>
+        </div>
 
-<h2 id="user">Не авторизован</h2>
+        <div class="input-group">
+            <input type="email" id="email" placeholder="240251@turan-edu.kz">
+            <input type="password" id="password" placeholder="Пароль">
+        </div>
 
-<div id="timer">0 сек</div>
+        <div class="action-buttons">
+            <button class="btn-action" onclick="signIn()">Войти</button>
+            <button class="btn-action" onclick="signUp()">Регистрация</button>
+            <button class="btn-action" onclick="signOut()">Выйти</button>
+        </div>
+    </div>
 
-<button id="start">Старт</button>
-<button id="pause">Пауза</button>
-<button id="stop">Стоп</button>
+    <div class="panel chat-panel">
+        <h3>Общий чат</h3>
+        <div class="chat-history" id="chat-history">
+            <div style="color: #aaa; text-align: center; font-size: 12px; margin-top: 50px;">
+                Войдите, чтобы читать и отправлять сообщения
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-message" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button class="btn-send" onclick="sendMessage()">➔</button>
+        </div>
+    </div>
 
-<hr>
+    <script>
+        // === ИНИЦИАЛИЗАЦИЯ SUPABASE ===
+        const SUPABASE_URL = "https://eehbqfrrojaykcipwpvp.supabase.co"; 
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlaGJxZnJyb2pheWtjaXB3cHZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjk4MzksImV4cCI6MjA5MTk0NTgzOX0.L5vqwPKu7Ps3izTIwMvdtt71u7YPXXZ__k1yNqpmzQE";
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-<input id="email" placeholder="email">
-<input id="password" placeholder="password">
-<input id="name" placeholder="name">
+        let currentUser = null;
 
-<button id="login">Войти</button>
-<button id="signup">Регистрация</button>
-<button id="logout">Выйти</button>
+        // === РАБОТА С ТАЙМЕРОМ ===
+        let timerInterval;
+        let totalSeconds = parseInt(localStorage.getItem('studySeconds')) || 0;
+        document.getElementById('seconds').innerText = totalSeconds;
 
-<hr>
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                totalSeconds++;
+                document.getElementById('seconds').innerText = totalSeconds;
+                localStorage.setItem('studySeconds', totalSeconds);
+            }, 1000);
+        }
 
-<div id="chat"></div>
+        function pauseTimer() {
+            clearInterval(timerInterval);
+        }
 
-<input id="msg" placeholder="сообщение">
-<button id="send">Отправить</button>
+        function stopTimer() {
+            clearInterval(timerInterval);
+            totalSeconds = 0;
+            document.getElementById('seconds').innerText = totalSeconds;
+            localStorage.setItem('studySeconds', totalSeconds);
+        }
 
-</div>
+        // === СОХРАНЕНИЕ ПОЛЬЗОВАТЕЛЕЙ И СТАТУСА ОНЛАЙН ===
+        async function saveUserToProfiles(user) {
+            if (!user) return;
+            // Делаем upsert: если пользователя нет в таблице profiles — добавит, если есть — обновит время входа
+            await _supabase.from('profiles').upsert({
+                id: user.id,
+                email: user.email,
+                last_seen: new Date().toISOString()
+            });
+        }
 
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js";
+        // === ЛОГИКА АВТОРИЗАЦИИ ===
+        async function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            if(!email || !password) return alert("Заполните поля!");
 
-const supabase = createClient(
-  "https://jjaxitqamrxkktiltgdd.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqYXhpdHFhbXJ4a2t0aWx0Z2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNTkyNTYsImV4cCI6MjA5MjkzNTI1Nn0.9YorjGmJ7a8m-8JTUyDuTyfZs1GDVE-z483t5iczmfs"
-);
+            const { data, error } = await _supabase.auth.signUp({ email, password });
+            if (error) return alert("Ошибка регистрации: " + error.message);
 
-// ===== USER =====
-let userData = null;
+            alert("Регистрация успешна!");
+            if (data.user) await saveUserToProfiles(data.user);
+            checkUser();
+        }
 
-async function getUser() {
-  const { data } = await supabase.auth.getUser();
-  userData = data.user;
+        async function signIn() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            if(!email || !password) return alert("Заполните поля!");
 
-  document.getElementById("user").textContent =
-    userData ? (userData.user_metadata?.name || userData.email) : "Не авторизован";
-}
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+            if (error) return alert("Ошибка входа: " + error.message);
 
-// ===== AUTH =====
-document.getElementById("signup").onclick = async () => {
-  const { error } = await supabase.auth.signUp({
-    email: email.value,
-    password: password.value,
-    options: { data: { name: name.value } }
-  });
+            if (data.user) await saveUserToProfiles(data.user);
+            checkUser();
+        }
 
-  if (error) return alert(error.message);
-  alert("Готово (если включено подтверждение — проверь почту)");
-};
+        async function signOut() {
+            await _supabase.auth.signOut();
+            currentUser = null;
+            checkUser();
+        }
 
-document.getElementById("login").onclick = async () => {
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  });
+        async function checkUser() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const statusText = document.getElementById('auth-status');
+            
+            if (user) {
+                currentUser = user;
+                statusText.innerText = "Авторизован: " + user.email;
+                startTimer();
+                loadMessages(); // Загружаем историю чата
+                subscribeToChat(); // Включаем авто-обновление чата в реальном времени
+            } else {
+                currentUser = null;
+                statusText.innerText = "Не авторизован";
+                pauseTimer();
+                document.getElementById('chat-history').innerHTML = `
+                    <div style="color: #aaa; text-align: center; font-size: 12px; margin-top: 50px;">
+                        Войдите, чтобы читать и отправлять сообщения
+                    </div>`;
+            }
+        }
 
-  if (error) return alert(error.message);
-  getUser();
-};
+        // === ЛОГИКА РАБОТЫ ОБЩЕГО ЧАТА ===
+        
+        // 1. Загрузка старых сообщений из БД
+        async function loadMessages() {
+            if (!currentUser) return;
+            
+            const { data: messages, error } = await _supabase
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(50);
 
-document.getElementById("logout").onclick = async () => {
-  await supabase.auth.signOut();
-  userData = null;
-  getUser();
-};
+            if (error) console.log("Ошибка загрузки сообщений:", error.message);
+            
+            const historyContainer = document.getElementById('chat-history');
+            historyContainer.innerHTML = ""; // Очищаем контейнер
 
-// ===== TIMER =====
-let sec = 0;
-let int = null;
+            if(messages && messages.length > 0) {
+                messages.forEach(msg => {
+                    appendMessageToDOM(msg);
+                });
+                scrollChatToBottom();
+            }
+        }
 
-document.getElementById("start").onclick = () => {
-  if (int) return;
-  int = setInterval(() => {
-    sec++;
-    document.getElementById("timer").textContent = sec + " сек";
-  }, 1000);
-};
+        // Вспомогательная функция отрисовки сообщения в окне
+        function appendMessageToDOM(msg) {
+            const historyContainer = document.getElementById('chat-history');
+            const msgElement = document.createElement('div');
+            msgElement.classList.add('msg');
+            msgElement.innerHTML = `
+                <div class="msg-author">${msg.user_email}</div>
+                <div>${msg.text}</div>
+            `;
+            historyContainer.appendChild(msgElement);
+        }
 
-document.getElementById("pause").onclick = () => {
-  clearInterval(int);
-  int = null;
-};
+        function scrollChatToBottom() {
+            const historyContainer = document.getElementById('chat-history');
+            historyContainer.scrollTop = historyContainer.scrollHeight;
+        }
 
-document.getElementById("stop").onclick = () => {
-  clearInterval(int);
-  int = null;
-  sec = 0;
-  document.getElementById("timer").textContent = "0 сек";
-};
+        // 2. Отправка нового сообщения в БД
+        async function sendMessage() {
+            if (!currentUser) return alert("Сначала необходимо авторизоваться!");
+            
+            const input = document.getElementById('chat-message');
+            const text = input.value.trim();
+            if (!text) return;
 
-// ===== CHAT =====
-async function loadChat() {
-  const { data } = await supabase
-    .from("messages")
-    .select("*")
-    .order("created_at");
+            // Вставляем запись в таблицу `messages`
+            const { error } = await _supabase.from('messages').insert({
+                user_email: currentUser.email,
+                text: text
+            });
 
-  const chat = document.getElementById("chat");
-  chat.innerHTML = "";
+            if (error) {
+                alert("Не удалось отправить: " + error.message);
+            } else {
+                input.value = ""; // Очищаем поле ввода
+            }
+        }
 
-  data.forEach(m => {
-    chat.innerHTML += `<div><b>${m.user_name}:</b> ${m.text}</div>`;
-  });
-}
+        // 3. Подписка на появление новых сообщений в реальном времени (Realtime)
+        function subscribeToChat() {
+            _supabase
+                .channel('public:messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                    appendMessageToDOM(payload.new);
+                    scrollChatToBottom();
+                })
+                .subscribe();
+        }
 
-document.getElementById("send").onclick = async () => {
-  if (!userData) return alert("войди");
-
-  const text = document.getElementById("msg").value;
-  if (!text) return;
-
-  const name = userData.user_metadata?.name || userData.email;
-
-  const { error } = await supabase.from("messages").insert({
-    user_name: name,
-    text
-  });
-
-  if (error) return alert(error.message);
-
-  document.getElementById("msg").value = "";
-  loadChat();
-};
-
-// ===== INIT =====
-getUser();
-loadChat();
-</script>
-
+        // Запуск проверки пользователя при старте
+        checkUser();
+    </script>
 </body>
 </html>
