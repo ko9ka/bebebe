@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Практика 2 - Розовый Интерфейс и Чат</title>
+    <title>Практика 2 - Панель Управления Учебой</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
-            background-color: #FF52A2; 
+            background-color: #FF52A2; /* Фирменный розовый фон */
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
@@ -17,204 +17,259 @@
             gap: 20px;
             min-height: 100vh;
             box-sizing: border-box;
-            color: white;
+            color: #333;
         }
 
-        /* Основные контейнеры (Форма и Чат) */
-        .panel {
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            box-sizing: border-box;
-        }
-
-        .left-panel {
-            width: 320px;
-            text-align: center;
-        }
-
-        .chat-panel {
-            width: 400px;
+        /* Контейнер для блоков (как в левой колонке твоего макета) */
+        .column {
             display: flex;
             flex-direction: column;
-            height: 480px;
+            gap: 15px;
+            width: 360px;
         }
 
-        h2, h3 {
-            font-size: 18px;
-            margin: 0 0 10px 0;
-            font-weight: normal;
-            opacity: 0.9;
+        /* Карточки блоков */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            box-sizing: border-box;
         }
 
-        /* Счетчик времени */
-        .timer {
-            font-size: 36px;
+        .profile-card { text-align: center; }
+        .profile-card h4 { margin: 0 0 5px 0; color: #555; }
+
+        /* Таймер времени */
+        .timer-val {
+            font-size: 32px;
             font-weight: bold;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .timer-buttons {
+            color: #FF007F;
+            margin: 10px 0;
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 8px;
-            margin-bottom: 20px;
         }
 
-        .btn-timer {
-            background: #FF007F;
-            border: none;
-            color: white;
-            padding: 6px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        /* Поля ввода */
-        input {
+        /* Кнопки действий */
+        .btn-main {
             width: 100%;
-            padding: 11px;
-            margin: 6px 0;
+            background: #FF007F;
+            color: white;
             border: none;
+            padding: 12px;
             border-radius: 8px;
-            box-sizing: border-box;
-            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 8px;
             font-size: 14px;
-            background: white;
+        }
+        .btn-main:hover { background: #E60073; }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-sub {
+            flex: 1;
+            background: #F0F0F0;
+            color: #555;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn-sub.active {
+            background: #FFB6C1;
+            color: #FF007F;
         }
 
-        /* Кнопки */
-        .action-buttons {
+        /* Авторизация инпуты */
+        .auth-inputs input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #DDD;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        /* МОНИТОР ГРУППЫ */
+        .monitor-card h3, .chat-card h3 {
+            margin: 0 0 12px 0;
+            font-size: 15px;
+            color: #444;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .user-row {
             display: flex;
             justify-content: space-between;
-            margin-top: 15px;
+            align-items: center;
+            font-size: 13px;
+            padding: 4px 0;
+            border-bottom: 1px id #F9F9F9;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #CCC; /* Офлайн по умолчанию */
+        }
+        .dot.online {
+            background: #2ECC71; /* Онлайн-зеленый */
+            box-shadow: 0 0 6px #2ECC71;
+        }
+
+        /* ОБЩИЙ ЧАТ */
+        .chat-card {
+            display: flex;
+            flex-direction: column;
+            height: 280px;
+        }
+
+        .chat-box {
+            flex: 1;
+            background: #F9F9F9;
+            border: 1px solid #EAEAEA;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
             gap: 6px;
         }
 
-        .btn-action {
-            flex: 1;
-            background: white;
-            color: #FF52A2;
-            border: none;
-            padding: 11px 0;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s;
-        }
-
-        .btn-action:hover {
+        .chat-msg {
             background: #FFF0F5;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+            max-width: 90%;
+            align-self: flex-start;
         }
-
-        /* Стили окна Общего Чата */
-        .chat-history {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 12px;
-            padding: 15px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .msg {
-            background: #FFE4E1;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            max-width: 85%;
-            word-break: break-word;
-            border-left: 4px solid #FF52A2;
-        }
-
-        .msg-author {
+        .chat-msg .author {
             font-weight: bold;
-            color: #D87093;
-            font-size: 11px;
+            color: #FF007F;
+            font-size: 10px;
             margin-bottom: 2px;
         }
 
-        .chat-input-area {
+        .chat-input-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
-
-        .btn-send {
-            background: #FF007F;
+        .chat-input-row input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #DDD;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .chat-input-row button {
+            background: #2ECC71;
             color: white;
             border: none;
-            padding: 0 20px;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 0 14px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <div class="panel left-panel">
-        <h2 id="auth-status">Не авторизован</h2>
+    <div class="column">
         
-        <div class="timer"><span id="seconds">0</span> сек</div>
-        
-        <div class="timer-buttons">
-            <button class="btn-timer" onclick="startTimer()">Старт</button>
-            <button class="btn-timer" onclick="pauseTimer()">Пауза</button>
-            <button class="btn-timer" onclick="stopTimer()">Стоп</button>
-        </div>
+        <div class="card profile-card">
+            <h4 id="user-display">Загрузка аккаунта...</h4>
+            <div class="timer-val">
+                <span>⏱️</span> <span id="seconds">0</span> сек.
+            </div>
+            
+            <button class="btn-main" id="btn-toggle-session" onclick="toggleSession()">Завершить сессию</button>
+            
+            <div class="btn-row">
+                <button class="btn-sub" id="btn-pause" onclick="pauseSession()">Перерыв</button>
+                <button class="btn-sub" onclick="signOut()">Выход</button>
+            </div>
 
-        <div class="input-group">
-            <input type="email" id="email" placeholder="240251@turan-edu.kz">
-            <input type="password" id="password" placeholder="Пароль">
-        </div>
-
-        <div class="action-buttons">
-            <button class="btn-action" onclick="signIn()">Войти</button>
-            <button class="btn-action" onclick="signUp()">Регистрация</button>
-            <button class="btn-action" onclick="signOut()">Выйти</button>
-        </div>
-    </div>
-
-    <div class="panel chat-panel">
-        <h3>Общий чат</h3>
-        <div class="chat-history" id="chat-history">
-            <div style="color: #aaa; text-align: center; font-size: 12px; margin-top: 50px;">
-                Войдите, чтобы читать и отправлять сообщения
+            <div id="auth-form" style="display:none; margin-top:15px; border-top:1px solid #EEE; padding-top:15px;">
+                <div class="auth-inputs">
+                    <input type="email" id="email" placeholder="Email (240251@turan-edu.kz)">
+                    <input type="password" id="password" placeholder="Пароль">
+                </div>
+                <div class="btn-row" style="margin-top:5px;">
+                    <button class="btn-sub" style="background:#FF007F; color:white;" onclick="signIn()">Войти</button>
+                    <button class="btn-sub" onclick="signUp()">Рега</button>
+                </div>
             </div>
         </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-message" placeholder="Введите сообщение..." onkeypress="if(event.key === 'Enter') sendMessage()">
-            <button class="btn-send" onclick="sendMessage()">➔</button>
+
+        <div class="card monitor-card">
+            <h3>👥 Монитор группы</h3>
+            <div class="user-list" id="monitor-list">
+                <div style="color:#aaa; font-size:12px; text-align:center;">Загрузка списка группы...</div>
+            </div>
         </div>
+
+        <div class="card chat-card">
+            <h3>💬 Общий чат</h3>
+            <div class="chat-box" id="chat-box">
+                <div style="color:#aaa; font-size:11px; text-align:center; margin-top:40px;">Войдите в систему для просмотра сообщений.</div>
+            </div>
+            <div class="chat-input-row">
+                <input type="text" id="msg-text" placeholder="Сообщение..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()">➔</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // === ИНИЦИАЛИЗАЦИЯ SUPABASE ===
+        // === КОНФИГУРАЦИЯ ТВОЕГО SUPABASE ===
         const SUPABASE_URL = "https://eehbqfrrojaykcipwpvp.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlaGJxZnJyb2pheWtjaXB3cHZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjk4MzksImV4cCI6MjA5MTk0NTgzOX0.L5vqwPKu7Ps3izTIwMvdtt71u7YPXXZ__k1yNqpmzQE";
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentUser = null;
-
-        // === РАБОТА С ТАЙМЕРОМ ===
-        let timerInterval;
+        let timerInterval = null;
+        let isPaused = false;
         let totalSeconds = parseInt(localStorage.getItem('studySeconds')) || 0;
+
         document.getElementById('seconds').innerText = totalSeconds;
 
+        // === УПРАВЛЕНИЕ ТАЙМЕРОМ СЕССИИ ===
         function startTimer() {
-            clearInterval(timerInterval);
+            if(timerInterval) clearInterval(timerInterval);
+            isPaused = false;
+            document.getElementById('btn-pause').classList.remove('active');
+            document.getElementById('btn-toggle-session').innerText = "Завершить сессию";
+            document.getElementById('btn-toggle-session').style.background = "#FF007F";
+
             timerInterval = setInterval(() => {
                 totalSeconds++;
                 document.getElementById('seconds').innerText = totalSeconds;
@@ -222,55 +277,64 @@
             }, 1000);
         }
 
-        function pauseTimer() {
-            clearInterval(timerInterval);
+        function pauseSession() {
+            if (!currentUser) return;
+            if (!isPaused) {
+                clearInterval(timerInterval);
+                isPaused = true;
+                document.getElementById('btn-pause').classList.add('active');
+                document.getElementById('btn-toggle-session').innerText = "Продолжить учебу";
+                document.getElementById('btn-toggle-session').style.background = "#2ECC71";
+            } else {
+                startTimer();
+            }
         }
 
-        function stopTimer() {
-            clearInterval(timerInterval);
-            totalSeconds = 0;
-            document.getElementById('seconds').innerText = totalSeconds;
-            localStorage.setItem('studySeconds', totalSeconds);
+        function toggleSession() {
+            if (!currentUser) return;
+            if (isPaused) {
+                // Если были на паузе — продолжаем
+                startTimer();
+            } else {
+                // Если учились — обнуляем сессию
+                clearInterval(timerInterval);
+                totalSeconds = 0;
+                document.getElementById('seconds').innerText = totalSeconds;
+                localStorage.setItem('studySeconds', totalSeconds);
+                startTimer();
+            }
         }
 
-        // === СОХРАНЕНИЕ ПОЛЬЗОВАТЕЛЕЙ И СТАТУСА ОНЛАЙН ===
-        async function saveUserToProfiles(user) {
+        // === ОБНОВЛЕНИЕ СТАТУСА ПРИСУТСТВИЯ (БД profiles) ===
+        async function updatePresence(user) {
             if (!user) return;
-            // Делаем upsert: если пользователя нет в таблице profiles — добавит, если есть — обновит время входа
             await _supabase.from('profiles').upsert({
                 id: user.id,
                 email: user.email,
                 last_seen: new Date().toISOString()
             });
+            loadGroupMonitor(); // Сразу перерисовываем список группы
         }
 
-        // === ЛОГИКА АВТОРИЗАЦИИ ===
+        // === АВТОРИЗАЦИЯ ===
         async function signUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            if(!email || !password) return alert("Заполните поля!");
-
             const { data, error } = await _supabase.auth.signUp({ email, password });
-            if (error) return alert("Ошибка регистрации: " + error.message);
-
-            alert("Регистрация успешна!");
-            if (data.user) await saveUserToProfiles(data.user);
-            checkUser();
+            if (error) alert(error.message);
+            else { alert("Успешно зарегистрировано!"); if(data.user) await updatePresence(data.user); checkUser(); }
         }
 
         async function signIn() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            if(!email || !password) return alert("Заполните поля!");
-
             const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-            if (error) return alert("Ошибка входа: " + error.message);
-
-            if (data.user) await saveUserToProfiles(data.user);
-            checkUser();
+            if (error) alert(error.message);
+            else { if(data.user) await updatePresence(data.user); checkUser(); }
         }
 
         async function signOut() {
+            clearInterval(timerInterval);
             await _supabase.auth.signOut();
             currentUser = null;
             checkUser();
@@ -278,100 +342,113 @@
 
         async function checkUser() {
             const { data: { user } } = await _supabase.auth.getUser();
-            const statusText = document.getElementById('auth-status');
             
             if (user) {
                 currentUser = user;
-                statusText.innerText = "Авторизован: " + user.email;
+                document.getElementById('user-display').innerText = user.email;
+                document.getElementById('auth-form').style.display = 'none';
                 startTimer();
-                loadMessages(); // Загружаем историю чата
-                subscribeToChat(); // Включаем авто-обновление чата в реальном времени
+                loadMessages();
+                loadGroupMonitor();
+                listenRealtimeChannels(); // Включаем «живое» обновление данных
             } else {
                 currentUser = null;
-                statusText.innerText = "Не авторизован";
-                pauseTimer();
-                document.getElementById('chat-history').innerHTML = `
-                    <div style="color: #aaa; text-align: center; font-size: 12px; margin-top: 50px;">
-                        Войдите, чтобы читать и отправлять сообщения
-                    </div>`;
+                document.getElementById('user-display').innerText = "Вход в систему";
+                document.getElementById('auth-form').style.display = 'block';
+                document.getElementById('chat-box').innerHTML = `<div style="color:#aaa; font-size:11px; text-align:center; margin-top:40px;">Войдите в систему для просмотра сообщений.</div>`;
+                document.getElementById('monitor-list').innerHTML = `<div style="color:#aaa; font-size:11px; text-align:center;">Список недоступен.</div>`;
             }
         }
 
-        // === ЛОГИКА РАБОТЫ ОБЩЕГО ЧАТА ===
-        
-        // 1. Загрузка старых сообщений из БД
+        // === МОНИТОР ГРУППЫ (Вывод челов) ===
+        async function loadGroupMonitor() {
+            if(!currentUser) return;
+            const { data: profiles, error } = await _supabase.from('profiles').select('*').order('last_seen', { ascending: false });
+            if (error) return;
+
+            const listContainer = document.getElementById('monitor-list');
+            listContainer.innerHTML = "";
+
+            profiles.forEach(p => {
+                // Если человек обновлял статус последние 3 минуты — он Онлайн
+                const isOnline = (new Date() - new Date(p.last_seen)) < 3 * 60 * 1000;
+                const shortName = p.email.split('@')[0];
+
+                const row = document.createElement('div');
+                row.classList.add('user-row');
+                row.innerHTML = `
+                    <div class="user-info">
+                        <span class="dot ${isOnline ? 'online' : ''}"></span>
+                        <span>${shortName}</span>
+                    </div>
+                    <span style="font-size:10px; color:#aaa;">${isOnline ? '🏠 Дома' : 'был недавно'}</span>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        // === ОБЩИЙ ЧАТ (Загрузка и вывод сообщений) ===
         async function loadMessages() {
             if (!currentUser) return;
-            
-            const { data: messages, error } = await _supabase
-                .from('messages')
-                .select('*')
-                .order('created_at', { ascending: true })
-                .limit(50);
+            const { data: messages, error } = await _supabase.from('messages').select('*').order('created_at', { ascending: true }).limit(40);
+            if (error) return;
 
-            if (error) console.log("Ошибка загрузки сообщений:", error.message);
-            
-            const historyContainer = document.getElementById('chat-history');
-            historyContainer.innerHTML = ""; // Очищаем контейнер
-
-            if(messages && messages.length > 0) {
-                messages.forEach(msg => {
-                    appendMessageToDOM(msg);
-                });
-                scrollChatToBottom();
+            const box = document.getElementById('chat-box');
+            box.innerHTML = "";
+            if (messages) {
+                messages.forEach(msg => appendMessage(msg));
+                box.scrollTop = box.scrollHeight;
             }
         }
 
-        // Вспомогательная функция отрисовки сообщения в окне
-        function appendMessageToDOM(msg) {
-            const historyContainer = document.getElementById('chat-history');
-            const msgElement = document.createElement('div');
-            msgElement.classList.add('msg');
-            msgElement.innerHTML = `
-                <div class="msg-author">${msg.user_email}</div>
+        function appendMessage(msg) {
+            const box = document.getElementById('chat-box');
+            const msgEl = document.createElement('div');
+            msgEl.classList.add('chat-msg');
+            msgEl.innerHTML = `
+                <div class="author">${msg.user_email.split('@')[0]}</div>
                 <div>${msg.text}</div>
             `;
-            historyContainer.appendChild(msgElement);
+            box.appendChild(msgEl);
+            box.scrollTop = box.scrollHeight;
         }
 
-        function scrollChatToBottom() {
-            const historyContainer = document.getElementById('chat-history');
-            historyContainer.scrollTop = historyContainer.scrollHeight;
-        }
-
-        // 2. Отправка нового сообщения в БД
-        async function sendMessage() {
-            if (!currentUser) return alert("Сначала необходимо авторизоваться!");
-            
-            const input = document.getElementById('chat-message');
+        async function sendChatMessage() {
+            const input = document.getElementById('msg-text');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text || !currentUser) return;
 
-            // Вставляем запись в таблицу `messages`
             const { error } = await _supabase.from('messages').insert({
                 user_email: currentUser.email,
                 text: text
             });
-
-            if (error) {
-                alert("Не удалось отправить: " + error.message);
-            } else {
-                input.value = ""; // Очищаем поле ввода
-            }
+            if (error) alert("Ошибка отправки: " + error.message);
+            else input.value = "";
         }
 
-        // 3. Подписка на появление новых сообщений в реальном времени (Realtime)
-        function subscribeToChat() {
-            _supabase
-                .channel('public:messages')
+        // === REALTIME (Чтобы сообщения не улетали, а сразу рисовались) ===
+        function listenRealtimeChannels() {
+            // Подписка на сообщения
+            _supabase.channel('room-messages')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                    appendMessageToDOM(payload.new);
-                    scrollChatToBottom();
+                    appendMessage(payload.new);
                 })
                 .subscribe();
+
+            // Подписка на изменение онлайна группы
+            _supabase.channel('room-profiles')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
+                    loadGroupMonitor();
+                })
+                .subscribe();
+
+            // Каждые 2 минуты обновляем свой статус "last_seen" в фоне
+            setInterval(() => {
+                if (currentUser) updatePresence(currentUser);
+            }, 120000);
         }
 
-        // Запуск проверки пользователя при старте
+        // Запуск при старте страницы
         checkUser();
     </script>
 </body>
